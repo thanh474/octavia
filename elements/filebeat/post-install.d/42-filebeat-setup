@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+if [[ -d /etc/filebeat/filebeat.yml ]] ; then
+    cat >> /etc/filebeat/filebeat.yml  <<EOF
+setup.kibana:
+  host: "10.10.10.15:5601"
+
+output.logstash:
+  # The Logstash hosts
+  hosts: ["10.10.10.10:5044"]
+EOF
+fi

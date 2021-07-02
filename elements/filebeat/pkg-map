@@ -1,0 +1,10 @@
+{
+    "distro": {
+        "ubuntu": {
+            "filebeat": "filebeat"
+        }
+    },
+    "default": {
+        "filebeat": "filebeat"
+    }
+}

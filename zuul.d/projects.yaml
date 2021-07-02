@@ -1,0 +1,106 @@
+# Note: Some official OpenStack wide jobs are still defined in the
+#       project-config repository
+- project:
+    templates:
+      - check-requirements
+      - periodic-stable-jobs-neutron
+      - openstack-cover-jobs
+      - openstack-python-jobs
+      - openstack-python3-train-jobs
+      - publish-openstack-docs-pti
+      - release-notes-jobs-python3
+      - octavia-tox-tips
+    check:
+      jobs:
+        - openstack-tox-functional:
+            irrelevant-files:
+              - ^.*\.rst$
+              - ^api-ref/.*$
+              - ^doc/.*$
+              - ^etc/.*$
+              - ^releasenotes/.*$
+        - openstack-tox-functional-py36:
+            irrelevant-files:
+              - ^.*\.rst$
+              - ^api-ref/.*$
+              - ^doc/.*$
+              - ^etc/.*$
+              - ^releasenotes/.*$
+        - octavia-v2-dsvm-noop-api:
+            nodeset: octavia-single-node-ubuntu-bionic
+        - octavia-v2-dsvm-noop-py2-api:
+            nodeset: octavia-single-node-ubuntu-bionic
+        - octavia-v2-dsvm-scenario:
+            nodeset: octavia-single-node-ubuntu-bionic
+        - octavia-v2-dsvm-py2-scenario:
+            nodeset: octavia-single-node-ubuntu-bionic
+            voting: false
+        - octavia-v2-dsvm-py2-scenario-centos-7:
+            voting: false
+        - octavia-v2-dsvm-scenario-two-node:
+            nodeset: octavia-single-node-ubuntu-bionic
+            voting: false
+        - octavia-v2-dsvm-py2-scenario-two-node:
+            nodeset: octavia-single-node-ubuntu-bionic
+            voting: false
+        - octavia-v2-dsvm-tls-barbican:
+            nodeset: octavia-single-node-ubuntu-bionic
+            irrelevant-files:
+              - ^.*\.rst$
+              - ^api-ref/.*$
+              - ^doc/.*$
+              - ^octavia/tests/unit/.*$
+              - ^releasenotes/.*$
+            voting: false
+        - octavia-v2-dsvm-scenario-amphora-v2:
+            nodeset: octavia-single-node-ubuntu-bionic
+            irrelevant-files:
+              - ^.*\.rst$
+              - ^api-ref/.*$
+              - ^doc/.*$
+              - ^octavia/tests/unit/.*$
+              - ^releasenotes/.*$
+            voting: false
+        - octavia-v2-act-stdby-iptables-dsvm-scenario:
+            nodeset: octavia-single-node-ubuntu-bionic
+            voting: false
+        - octavia-v2-act-stdby-iptables-dsvm-py2-scenario:
+            nodeset: octavia-single-node-ubuntu-bionic
+            voting: false
+        - octavia-v2-act-stdby-iptables-dsvm-py2-scenario-centos-7:
+            voting: false
+    gate:
+      fail-fast: true
+      queue: octavia
+      jobs:
+        - openstack-tox-functional:
+            irrelevant-files:
+              - ^.*\.rst$
+              - ^api-ref/.*$
+              - ^doc/.*$
+              - ^etc/.*$
+              - ^releasenotes/.*$
+        - openstack-tox-functional-py36:
+            irrelevant-files:
+              - ^.*\.rst$
+              - ^api-ref/.*$
+              - ^doc/.*$
+              - ^etc/.*$
+              - ^releasenotes/.*$
+        - octavia-v2-dsvm-noop-api:
+            nodeset: octavia-single-node-ubuntu-bionic
+        - octavia-v2-dsvm-noop-py2-api:
+            nodeset: octavia-single-node-ubuntu-bionic
+        - octavia-v2-dsvm-scenario:
+            nodeset: octavia-single-node-ubuntu-bionic
+    periodic:
+      jobs:
+        - publish-openstack-octavia-amphora-image-xenial:
+            branches: ^(?!stable/.*).*$
+        - publish-openstack-octavia-amphora-image-bionic:
+            branches: ^(?!stable/.*).*$
+        - publish-openstack-octavia-amphora-image-centos7:
+            branches: ^(?!stable/.*).*$
+        - publish-openstack-octavia-amphora-image-fedora28:
+            branches: ^(?!stable/.*).*$
+        - octavia-amphora-image-build
