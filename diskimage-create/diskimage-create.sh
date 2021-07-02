@@ -403,8 +403,7 @@ if [ "${AMP_BASEOS}" = "centos-minimal" ]; then
     export DIB_YUM_MINIMAL_CREATE_INTERFACES=0
 fi
 
-# Add filebeat element
-#AMP_element_sequence="$AMP_element_sequence filebeat"
+AMP_element_sequence="$AMP_element_sequence filebeat"
 
 # Add keepalived-octavia element
 AMP_element_sequence="$AMP_element_sequence keepalived-octavia"
