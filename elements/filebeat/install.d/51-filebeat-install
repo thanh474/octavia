@@ -1,6 +1,7 @@
 #!/bin/bash
 
-set -eux
-set -o pipefail
-
-[ -d /var/lib/filebeat ] || install -d -D -m 0755 -o root -g root /var/lib/filebeat
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+sudo apt-get install apt-transport-https -y 
+echo "deb https://artifacts.elastic.co/packages/oss-7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
+sudo apt-get update -y && sudo apt-get install filebeat -y
+sudo systemctl enable filebeat 
