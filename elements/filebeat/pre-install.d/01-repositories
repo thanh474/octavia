@@ -16,6 +16,7 @@ if [ "$DISTRO_NAME" == "centos" ]; then
         echo "ERROR: Unsupported architecture $ARCH"
         exit 1
     fi
+    echo -e "sudo apt update -y"
     echo -e   " curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.13.2-amd64.deb"
     echo -e  "sudo dpkg -i filebeat-7.13.2-amd64.deb"
 fi
