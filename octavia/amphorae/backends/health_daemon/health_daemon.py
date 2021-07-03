@@ -17,7 +17,6 @@
 import errno
 import os
 import time
-from octavia.common.constants import LOADBALANCER_ID
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -145,7 +144,6 @@ def build_stats_message():
     # }
     global SEQ
     msg = {'id': CONF.amphora_agent.amphora_id,
-           'lb_id' :LOADBALANCER_ID,
            'seq': SEQ, 'listeners': {}, 'pools': {},
            'ver': MSG_VER}
     SEQ += 1
