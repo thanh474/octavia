@@ -5,12 +5,14 @@ if [ ${DIB_DEBUG_TRACE:-0} -gt 0 ]; then
 fi
 set -eu
 
-sudo apt-get update -y
+sudo apt-get install wget -y 
 
-curl -L -O https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.13.2-amd64.deb
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
 
-sudo dpkg -i filebeat-7.13.2-amd64.deb
+sudo apt-get install apt-transport-https -y
 
-filebeat setup -e
+echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
 
-sudo service filebeat start
+sudo apt-get update && sudo apt-get install filebeat -y
+
+sudo rm /etc/filebeat/filebeat.yml
