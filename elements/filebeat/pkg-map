@@ -1,0 +1,15 @@
+{
+    "distro": {
+        "ubuntu": {
+            "filebeat": "filebeat"
+        }
+    },
+    "family": {
+        "debian": {
+            "filebeat": "filebeat"
+        }
+    },
+    "default": {
+        "filebeat": "filebeat"
+    }
+}
