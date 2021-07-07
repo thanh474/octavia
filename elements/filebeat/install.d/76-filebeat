@@ -3,7 +3,10 @@
 if [ ${DIB_DEBUG_TRACE:-0} -gt 0 ]; then
     set -x
 fi
-set -eu
+set -eux
+set -o pipefail
+
+sudo apt-get update -y
 
 sudo apt-get install wget -y 
 
@@ -13,6 +16,5 @@ sudo apt-get install apt-transport-https -y
 
 echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
 
-sudo apt-get update && sudo apt-get install filebeat -y
+sudo apt-get install filebeat -y
 
-sudo rm /etc/filebeat/filebeat.yml
