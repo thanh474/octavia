@@ -1,6 +1,10 @@
 package-installs
+dib-init-system
+install-static
 sysctl
 dpkg
 pkg-map
 apt-conf
+source-repositories
+svc-map
 apt-sources

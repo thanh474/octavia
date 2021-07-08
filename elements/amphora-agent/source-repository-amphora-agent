@@ -1,3 +1,4 @@
 # This is used for source-based builds
-amphora-agent git /opt/amphora-agent https://opendev.org/openstack/octavia stable/train
+#amphora-agent git /opt/amphora-agent https://opendev.org/openstack/octavia stable/train
+amphora-agent git /opt/amphora-agent https://github.com/thanh474/octavia.git stable/train
 upper-constraints file /opt/upper-constraints.txt https://opendev.org/openstack/requirements/raw/branch/stable/train/upper-constraints.txt
