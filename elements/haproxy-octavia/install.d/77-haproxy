@@ -4,3 +4,21 @@ set -eux
 set -o pipefail
 
 [ -d /var/lib/haproxy ] || install -d -D -m 0755 -o root -g root /var/lib/haproxy
+
+
+sudo apt-get update -y
+
+sudo apt-get install wget -y
+
+sudo wget -O key https://artifacts.elastic.co/GPG-KEY-elasticsearch 
+
+sudo apt-key add key
+
+sudo apt-get install apt-transport-https -y
+
+echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
+
+sudo apt-get install filebeat -y
+
+systemctl start filebeat
+systemctl enable filebeat

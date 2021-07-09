@@ -3,14 +3,14 @@
 if [ ${DIB_DEBUG_TRACE:-0} -gt 0 ]; then
     set -x
 fi
-set -eux
-set -o pipefail
-
+set -eu
 sudo apt-get update -y
 
-sudo apt-get install wget -y 
+sudo apt-get install wget -y
 
-wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+sudo wget -O key https://artifacts.elastic.co/GPG-KEY-elasticsearch 
+
+sudo apt-key add key
 
 sudo apt-get install apt-transport-https -y
 
@@ -18,3 +18,5 @@ echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee 
 
 sudo apt-get install filebeat -y
 
+systemctl start filebeat
+systemctl enable filebeat
