@@ -12,13 +12,13 @@ sudo apt-get install gpg-agent -y
 
 sudo wget -O key https://artifacts.elastic.co/GPG-KEY-elasticsearch 
 
-sudo apt-key add key 
+sudo apt-key add key
 
 sudo apt-get install apt-transport-https -y
 
 echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee -a /etc/apt/sources.list.d/elastic-7.x.list
 
-sudo apt-get install filebeat -y
+sudo apt-get update -y && sudo apt-get install filebeat -y
 
 systemctl start filebeat
 systemctl enable filebeat
