@@ -8,7 +8,8 @@ libssl-dev:
   installtype: source
 python-dev:
   installtype: source
-
+filebeat:
+  installtype: package
 acl:
 acpid:
 apparmor:

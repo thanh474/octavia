@@ -1,0 +1,23 @@
+{
+    "release": {
+        "ubuntu": {
+            "trusty": {
+                "filebeat": "filebeat/trusty-backports"
+            }
+        }
+    },
+    "distro": {
+        "ubuntu": {
+            "filebeat": "filebeat"
+        }
+    },
+    "family": {
+        "debian": {
+            "filebeat": "filebeat"
+        }
+    },
+    "default": {
+        "filebeat": "filebeat"
+    }
+
+}
