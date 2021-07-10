@@ -22,8 +22,11 @@ echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee 
 
 sudo apt-get update -y && sudo apt-get install filebeat -y
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 sudo rm -rf /etc/filebeat/filebeat.yml
+=======
+>>>>>>> e328fd1bf19b5a86848d5279946c054eaf4c2805
 =======
 >>>>>>> e328fd1bf19b5a86848d5279946c054eaf4c2805
 
