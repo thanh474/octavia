@@ -13,8 +13,6 @@ filebeat.config.modules:
 setup.template.settings:
   index.number_of_shards: 3
 
-setup.kibana:
-  host: "10.10.10.15:5601"
 
 output.logstash:
-  hosts: [ "10.10.10.10:5044"]
+  hosts: [ "{{ logstash_host }}"]
