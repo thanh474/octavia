@@ -328,3 +328,16 @@ class VRRPDriverMixin(object):
 
         :param loadbalancer: loadbalancer object
         """
+@six.add_metaclass(abc.ABCMeta)     
+class LoggingDriverMixin(object):
+    @abc.abstractmethod
+    def update_logging_config(self, loadbalancer):
+
+    @abc.abstractmethod
+    def start_logging_service(self, loadbalancer):
+
+    @abc.abstractmethod
+    def stop_logging_service(self, loadbalancer):
+
+    @abc.abstractmethod
+    def reload_logging_service(self, loadbalancer):

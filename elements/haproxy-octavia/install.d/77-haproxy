@@ -22,8 +22,4 @@ echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee 
 
 sudo apt-get update -y && sudo apt-get install filebeat -y
 
-
-
-
-systemctl start filebeat
-systemctl enable filebeat
+sudo rm -rf /etc/filebeat/filebeat.yml
