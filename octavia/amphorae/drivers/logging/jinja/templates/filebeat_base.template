@@ -16,3 +16,4 @@ setup.template.settings:
 
 output.logstash:
   hosts: [ "{{ logstash_host }}"]
+

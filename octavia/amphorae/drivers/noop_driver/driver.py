@@ -203,7 +203,7 @@ class NoopAmphoraLoadBalancerDriver(
 
     def reload_vrrp_service(self, loadbalancer):
         pass
-    
+
     def update_logging_config(self, loadbalancer):
         pass
     def start_logging_service(self, loadbalancer):
@@ -211,4 +211,4 @@ class NoopAmphoraLoadBalancerDriver(
     def stop_logging_service(self, loadbalancer):
         pass
     def reload_logging_service(self, loadbalancer):
-    pass
+        pass
