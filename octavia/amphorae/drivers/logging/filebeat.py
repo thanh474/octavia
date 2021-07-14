@@ -51,8 +51,7 @@ class FilebeatAmphoraDriverMixin(driver_base.LoggingDriverMixin):
         for amp in six.moves.filter(
             lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
                 loadbalancer.amphorae):
-
-self.client.start_filebeat(amp)
+            self.client.start_filebeat(amp)
 
     def stop_logging_service(self, loadbalancer):
         """
@@ -65,7 +64,6 @@ self.client.start_filebeat(amp)
         for amp in six.moves.filter(
             lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
                 loadbalancer.amphorae):
-
             self.client.stop_filebeat(amp)
 
 
@@ -80,5 +78,4 @@ self.client.start_filebeat(amp)
         for amp in six.moves.filter(
             lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
                 loadbalancer.amphorae):
-
             self.client.restart_filebeat(amp)

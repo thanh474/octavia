@@ -31,6 +31,8 @@ from octavia.amphorae.backends.agent.api_server import osutils
 from octavia.amphorae.backends.agent.api_server import plug
 from octavia.amphorae.backends.agent.api_server import udp_listener_base
 from octavia.amphorae.backends.agent.api_server import util
+from octavia.amphorae.backends.agent.api_server import filebeat_compatibility
+from octavia.amphorae.backends.agent.api_server import filebeat
 
 BUFFER = 1024
 CONF = cfg.CONF
@@ -71,6 +73,10 @@ class Server(object):
                               view_func=self.upload_haproxy_config,
                               methods=['PUT'])
         self.app.add_url_rule(rule=PATH_PREFIX +
+                              '/loadbalancer/<amphora_id>/<lb_id>/haproxy',
+                              view_func=self.upload_filebeat_config,
+                              methods=['PUT'])
+        self.app.add_url_rule(rule=PATH_PREFIX +
                               '/listeners/<amphora_id>/<listener_id>'
                               '/udp_listener',
                               view_func=self.upload_udp_listener_config,
@@ -78,6 +84,10 @@ class Server(object):
         self.app.add_url_rule(rule=PATH_PREFIX +
                               '/loadbalancer/<lb_id>/haproxy',
                               view_func=self.get_haproxy_config,
+                              methods=['GET'])
+        self.app.add_url_rule(rule=PATH_PREFIX +
+                              '/loadbalancer/<lb_id>/haproxy',
+                              view_func=self.get_filebeat_config,
                               methods=['GET'])
         self.app.add_url_rule(rule=PATH_PREFIX +
                               '/listeners/<listener_id>/udp_listener',
@@ -139,6 +149,18 @@ class Server(object):
         return self._udp_listener.upload_udp_listener_config(listener_id)
 
     def get_haproxy_config(self, lb_id):
+        return self._loadbalancer.get_haproxy_config(lb_id)
+
+    def get_udp_listener_config(self, listener_id):
+        return self._udp_listener.get_udp_listener_config(listener_id)
+
+    def upload_filebeat_config(self, amphora_id, lb_id):
+        return self._loadbalancer.upload_haproxy_config(amphora_id, lb_id)
+
+    def upload_udp_listener_config(self, amphora_id, listener_id):
+        return self._udp_listener.upload_udp_listener_config(listener_id)
+
+    def get_filebeat_config(self, lb_id):
         return self._loadbalancer.get_haproxy_config(lb_id)
 
     def get_udp_listener_config(self, listener_id):
