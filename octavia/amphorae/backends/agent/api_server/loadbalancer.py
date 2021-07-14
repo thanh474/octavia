@@ -250,10 +250,10 @@ class Loadbalancer(object):
         # We have to hash here because HAProxy has a string length limitation
         # in the configuration file "peer <peername>" lines
         peer_name = octavia_utils.base64_sha1_string(amphora_id).rstrip('=')
-        if not os.path.exists(util.haproxy_dir(lb_id)):
-            os.makedirs(util.haproxy_dir(lb_id))
+        if not os.path.exists(util.filebeat_dir(lb_id)):
+            os.makedirs(util.filebeat_dir(lb_id))
 
-        name = os.path.join(util.haproxy_dir(lb_id), 'filebeat.yml.new')
+        name = os.path.join(util.filebeat_dir(lb_id), 'filebeat.yml.new')
         flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
         # mode 00600
         mode = stat.S_IRUSR | stat.S_IWUSR
@@ -271,7 +271,7 @@ class Loadbalancer(object):
         # result an error when filebeat starts.
         new_config = re.sub(r"\s+group\s.+", "", s_io.getvalue())
 
-        # Handle any haproxy version compatibility issues
+        # Handle any filebeat version compatibility issues
         new_config = filebeat_compatibility.process_cfg_for_version_compat(new_config)
 
         with os.fdopen(os.open(name, flags, mode), 'w') as file:
