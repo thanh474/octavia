@@ -73,7 +73,7 @@ class Server(object):
                               view_func=self.upload_haproxy_config,
                               methods=['PUT'])
         self.app.add_url_rule(rule=PATH_PREFIX +
-                              '/loadbalancer/<amphora_id>/<lb_id>/haproxy',
+                              '/loadbalancer/<amphora_id>/<lb_id>/filebeat',
                               view_func=self.upload_filebeat_config,
                               methods=['PUT'])
         self.app.add_url_rule(rule=PATH_PREFIX +
@@ -86,7 +86,7 @@ class Server(object):
                               view_func=self.get_haproxy_config,
                               methods=['GET'])
         self.app.add_url_rule(rule=PATH_PREFIX +
-                              '/loadbalancer/<lb_id>/haproxy',
+                              '/loadbalancer/<lb_id>/filebeat',
                               view_func=self.get_filebeat_config,
                               methods=['GET'])
         self.app.add_url_rule(rule=PATH_PREFIX +
@@ -155,13 +155,13 @@ class Server(object):
         return self._udp_listener.get_udp_listener_config(listener_id)
 
     def upload_filebeat_config(self, amphora_id, lb_id):
-        return self._loadbalancer.upload_haproxy_config(amphora_id, lb_id)
+        return self._loadbalancer.upload_filebeat_config(amphora_id, lb_id)
 
     def upload_udp_listener_config(self, amphora_id, listener_id):
         return self._udp_listener.upload_udp_listener_config(listener_id)
 
     def get_filebeat_config(self, lb_id):
-        return self._loadbalancer.get_haproxy_config(lb_id)
+        return self._loadbalancer.get_filebeat_config(lb_id)
 
     def get_udp_listener_config(self, listener_id):
         return self._udp_listener.get_udp_listener_config(listener_id)
