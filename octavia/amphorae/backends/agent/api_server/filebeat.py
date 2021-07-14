@@ -12,7 +12,7 @@ from octavia.amphorae.backends.agent.api_server import util
 from octavia.common import constants as consts
 
 
-BUFFER = 100
+BUFFER = 1000
 
 LOG = logging.getLogger(__name__)
 

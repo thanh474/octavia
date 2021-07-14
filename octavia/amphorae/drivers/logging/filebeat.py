@@ -52,7 +52,7 @@ class FilebeatAmphoraDriverMixin(driver_base.LoggingDriverMixin):
             lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
                 loadbalancer.amphorae):
 
-            self.client.start_filebeat(amp)
+self.client.start_filebeat(amp)
 
     def stop_logging_service(self, loadbalancer):
         """

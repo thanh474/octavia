@@ -92,8 +92,7 @@ class KeepalivedAmphoraDriverMixin(driver_base.VRRPDriverMixin):
         LOG.info("Start amphora %s VRRP Service.", amphora.id)
 
         self._populate_amphora_api_version(amphora)
-        self.clients[amphora.api_version].start_vrrp(amphora,
-                                                     timeout_dict=timeout_dict)
+        self.clients[amphora.api_version].startimeout_dict=timeout_dict)
 
     def reload_vrrp_service(self, loadbalancer):
         """Reload the VRRP services of all amphorae of the loadbalancer
