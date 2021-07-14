@@ -91,12 +91,13 @@ class Loadbalancer(object):
             resp.headers['ETag'] = hashlib.md5(six.b(cfg)).hexdigest()  # nosec
             return resp
 
-    def upload_haproxy_config(self, amphora_id, lb_id):def upload_haproxy_config(self, amphora_id, lb_id):
+    def upload_haproxy_config(self, amphora_id, lb_id):
         """Upload the haproxy config
 
         :param amphora_id: The id of the amphora to update
         :param lb_id: The id of the loadbalancer
         """
+
         stream = Wrapped(flask.request.stream)
         # We have to hash here because HAProxy has a string length limitation
         # in the configuration file "peer <peername>" lines
