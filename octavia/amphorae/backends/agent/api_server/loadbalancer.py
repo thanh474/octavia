@@ -28,10 +28,11 @@ import six
 import webob
 from werkzeug import exceptions
 
-from octavia.amphorae.backends.agent.api_server import filebeat
+#from octavia.amphorae.backends.agent.api_server import filebeat
 from octavia.amphorae.backends.agent.api_server import haproxy_compatibility
 from octavia.amphorae.backends.agent.api_server import osutils
 from octavia.amphorae.backends.agent.api_server import util
+from octavia.amphorae.backends.utils import haproxy_query as query
 from octavia.common import constants as consts
 from octavia.common import utils as octavia_utils
 
@@ -43,7 +44,7 @@ CONF = cfg.CONF
 UPSTART_CONF = 'upstart.conf.j2'
 SYSVINIT_CONF = 'sysvinit.conf.j2'
 SYSTEMD_CONF = 'systemd.conf.j2'
-AMPHORA_NETNS = 'amphora-netns'
+
 
 JINJA_ENV = jinja2.Environment(
     autoescape=True,
@@ -54,6 +55,13 @@ UPSTART_TEMPLATE = JINJA_ENV.get_template(UPSTART_CONF)
 SYSVINIT_TEMPLATE = JINJA_ENV.get_template(SYSVINIT_CONF)
 SYSTEMD_TEMPLATE = JINJA_ENV.get_template(SYSTEMD_CONF)
 
+SYSTEMD_TEMPLATE1 = os.path.dirname(os.path.realpath(__file__)) + consts.AGENT_API_TEMPLATES + '/' + consts.FILEBEAT_JINJA2_SYSTEMD
+filebeat_dir = '/etc/filebeat/'
+conf_file = '/etc/filebeat/filebeat.yml'
+
+
+class ParsingError(Exception):
+    pass
 
 # Wrap a stream so we can compute the md5 while reading
 class Wrapped(object):
@@ -82,7 +90,7 @@ class Loadbalancer(object):
     def get_haproxy_config(self, lb_id):
         """Gets the haproxy config
 
-        :param lb_id: the id of the listener
+        :param lb_id: the id of the loadbalancer
         """
         self._check_lb_exists(lb_id)
         with open(util.config_path(lb_id), 'r') as file:
@@ -227,7 +235,7 @@ class Loadbalancer(object):
         res.headers['ETag'] = stream.get_md5()
 
         return res
-
+    
     def get_filebeat_config(self, lb_id):
         """Gets the filebeat config
 
@@ -241,7 +249,7 @@ class Loadbalancer(object):
             return resp
 
     def upload_filebeat_config(self):
-        stream = listener.Wrapped(flask.request.stream)
+        stream = Wrapped(flask.request.stream)
 
         if not os.path.exists(filebeat_dir):
             os.makedirs(filebeat_dir)
@@ -443,6 +451,42 @@ class Loadbalancer(object):
         if other_listeners:
             listeners = listeners + other_listeners
         return webob.Response(json=listeners, content_type='application/json')
+
+    def get_lb_status(self, lb_id):
+        """Gets the status of a listener
+
+        This method will consult the stats socket
+        so calling this method will interfere with
+        the health daemon with the risk of the amphora
+        shut down
+
+        Currently type==SSL is not detected
+        :param lb_id: The id of the listener
+        """
+        self._check_listener_exists(lb_id)
+
+        status = self._check_listener_status(lb_id)
+
+        if status != consts.ACTIVE:
+            stats = dict(
+                status=status,
+                uuid=lb_id,
+                type=''
+            )
+            return webob.Response(json=stats)
+
+        cfg = self._parse_haproxy_file(lb_id)
+        stats = dict(
+            status=status,
+            uuid=lb_id,
+            type=cfg['mode']
+        )
+
+        # read stats socket
+        q = query.HAProxyQuery(cfg['stats_socket'])
+        servers = q.get_pool_status()
+        stats['pools'] = list(servers.values())
+        return webob.Response(json=stats)
 
     def upload_certificate(self, lb_id, filename):
         self._check_ssl_filename_format(filename)
