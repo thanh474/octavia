@@ -71,11 +71,8 @@ class Server(object):
         self.app.add_url_rule(rule=PATH_PREFIX +
                               '/loadbalancer/<amphora_id>/<lb_id>/haproxy',
                               view_func=self.upload_haproxy_config,
-                              methods=['PUT'])
-        self.app.add_url_rule(rule=PATH_PREFIX + '/filebeat/upload',
-                              view_func=self.upload_filebeat_config,
                               methods=['PUT']) 
-                              
+
         self.app.add_url_rule(rule=PATH_PREFIX +
                               '/listeners/<amphora_id>/<listener_id>'
                               '/udp_listener',
@@ -140,7 +137,14 @@ class Server(object):
         self.app.add_url_rule(rule=PATH_PREFIX + '/interface/<ip_addr>',
                               view_func=self.get_interface,
                               methods=['GET'])
+                              
+        self.app.add_url_rule(rule=PATH_PREFIX + '/filebeat/upload',
+                              view_func=self.upload_filebeat_config,
+                              methods=['PUT']) 
 
+        self.app.add_url_rule(rule=PATH_PREFIX + '/filebeat/<action>',
+                              view_func=self.manage_service_filebeat,
+                              methods=['PUT']) 
     def upload_haproxy_config(self, amphora_id, lb_id):
         return self._loadbalancer.upload_haproxy_config(amphora_id, lb_id)
 
@@ -153,11 +157,6 @@ class Server(object):
     def get_udp_listener_config(self, listener_id):
         return self._udp_listener.get_udp_listener_config(listener_id)
 
-    def upload_filebeat_config(self):
-        return self._loadbalancer.upload_filebeat_config()
-
-    def get_filebeat_config(self):
-        return self._loadbalancer.get_filebeat_config()
     
     def start_stop_lb_object(self, object_id, action):
         protocol = util.get_protocol_for_lb_object(object_id)
@@ -262,3 +261,12 @@ class Server(object):
 
     def version_discovery(self):
         return webob.Response(json={'api_version': api_server.VERSION})
+
+    def upload_filebeat_config(self):
+        return self._filebeat.upload_filebeat_config()
+
+    def manage_service_filebeat(self, action):
+        return self._filebeat.manager_filebeat_service(action)
+
+    def get_filebeat_config(self):
+        return self._loadbalancer.get_filebeat_config()

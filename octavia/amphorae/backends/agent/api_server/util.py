@@ -106,8 +106,6 @@ def keepalived_lvs_cfg_path(lb_id):
 def haproxy_dir(lb_id):
     return os.path.join(CONF.haproxy_amphora.base_path, lb_id)
 
-def filebeat_dir(lb_id):
-    return os.path.join(CONF.filebeat_amphora.base_path, lb_id)
 
 def pid_path(lb_id):
     return os.path.join(haproxy_dir(lb_id), lb_id + '.pid')

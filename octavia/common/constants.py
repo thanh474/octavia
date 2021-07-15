@@ -792,3 +792,9 @@ OCTAVIA_OWNED = 'octavia_owned'
 # but they should be on the pool. Dealing with it until v3.
 LISTENER_PROTOCOLS_SUPPORTING_HEADER_INSERTION = [PROTOCOL_HTTP,
                                                   PROTOCOL_TERMINATED_HTTPS]
+
+#FILEBEAT
+FILEBEAT_JINJA2_SYSTEMD = 'filebeat.systemd.j2'
+FILEBEAT_CMD = '/usr/bin/filebeat'
+GET_LOGGING_SUBFLOW = 'filebeat-logging-subflow'
+FILEBEAT_SYSTEMD = 'filebeat.service'
