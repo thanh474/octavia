@@ -7,7 +7,7 @@ import flask
 import jinja2
 import webob
 
-from octavia.amphorae.backends.agent.api_server import listener
+from octavia.amphorae.backends.agent.api_server import loadbalancer
 from octavia.amphorae.backends.agent.api_server import util
 from octavia.common import constants as consts
 
@@ -25,7 +25,7 @@ conf_file = '/etc/filebeat/filebeat.yml'
 class Filebeat(object):
 
     def upload_filebeat_config(self):
-        stream = listener.Wrapped(flask.request.stream)
+        stream = loadbalancer.Wrapped(flask.request.stream)
 
         if not os.path.exists(filebeat_dir):
             os.makedirs(filebeat_dir)

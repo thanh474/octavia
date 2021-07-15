@@ -29,7 +29,6 @@ import webob
 from werkzeug import exceptions
 
 from octavia.amphorae.backends.agent.api_server import filebeat
-from octavia.amphorae.backends.agent.api_server import filebeat_compatibility
 from octavia.amphorae.backends.agent.api_server import haproxy_compatibility
 from octavia.amphorae.backends.agent.api_server import osutils
 from octavia.amphorae.backends.agent.api_server import util
@@ -44,6 +43,7 @@ CONF = cfg.CONF
 UPSTART_CONF = 'upstart.conf.j2'
 SYSVINIT_CONF = 'sysvinit.conf.j2'
 SYSTEMD_CONF = 'systemd.conf.j2'
+AMPHORA_NETNS = 'amphora-netns'
 
 JINJA_ENV = jinja2.Environment(
     autoescape=True,
@@ -54,9 +54,6 @@ UPSTART_TEMPLATE = JINJA_ENV.get_template(UPSTART_CONF)
 SYSVINIT_TEMPLATE = JINJA_ENV.get_template(SYSVINIT_CONF)
 SYSTEMD_TEMPLATE = JINJA_ENV.get_template(SYSTEMD_CONF)
 
-SYSTEMD_TEMPLATE1 = os.path.dirname(os.path.realpath(__file__)) + consts.AGENT_API_TEMPLATES + '/' + consts.FILEBEAT_JINJA2_SYSTEMD
-filebeat_dir = '/etc/filebeat/'
-conf_file = '/etc/filebeat/filebeat.yml'
 
 # Wrap a stream so we can compute the md5 while reading
 class Wrapped(object):
@@ -85,7 +82,7 @@ class Loadbalancer(object):
     def get_haproxy_config(self, lb_id):
         """Gets the haproxy config
 
-        :param listener_id: the id of the listener
+        :param lb_id: the id of the listener
         """
         self._check_lb_exists(lb_id)
         with open(util.config_path(lb_id), 'r') as file:
@@ -234,7 +231,7 @@ class Loadbalancer(object):
     def get_filebeat_config(self, lb_id):
         """Gets the filebeat config
 
-        :param listener_id: the id of the listener
+        :param lb_id: the id of the listener
         """
         self._check_lb_exists(lb_id)
         with open(util.config_path(lb_id), 'r') as file:
@@ -436,10 +433,10 @@ class Loadbalancer(object):
         for lb in util.get_loadbalancers():
             stats_socket, listeners_on_lb = util.parse_haproxy_file(lb)
 
-            for listener_id, listener in listeners_on_lb.items():
+            for lb_id, listener in listeners_on_lb.items():
                 listeners.append({
                     'status': consts.ACTIVE,
-                    'uuid': listener_id,
+                    'uuid': lb_id,
                     'type': listener['mode'],
                 })
 
@@ -493,6 +490,47 @@ class Loadbalancer(object):
             os.remove(self._cert_file_path(lb_id, filename))
         return webob.Response(json=dict(message='OK'))
 
+    def _check_listener_status(self, lb_id):
+        if os.path.exists(util.pid_path(lb_id)):
+            if os.path.exists(
+                    os.path.join('/proc', util.get_haproxy_pid(lb_id))):
+                # Check if the listener is disabled
+                with open(util.config_path(lb_id), 'r') as file:
+                    cfg = file.read()
+                    m = re.search('frontend {}'.format(lb_id), cfg)
+                    if m:
+                        return consts.ACTIVE
+                    else:
+                        return consts.OFFLINE
+            else:  # pid file but no process...
+                return consts.ERROR
+        else:
+            return consts.OFFLINE
+        
+    def _parse_haproxy_file(self, lb_id):
+        with open(util.config_path(lb_id), 'r') as file:
+            cfg = file.read()
+
+            m = re.search('mode\s+(http|tcp)', cfg)
+            if not m:
+                raise ParsingError()
+            mode = m.group(1).upper()
+
+            m = re.search('stats socket\s+(\S+)', cfg)
+            if not m:
+                raise ParsingError()
+            stats_socket = m.group(1)
+
+            m = re.search('ssl crt\s+(\S+)', cfg)
+            ssl_crt = None
+            if m:
+                ssl_crt = m.group(1)
+                mode = 'TERMINATED_HTTPS'
+
+            return dict(mode=mode,
+                        stats_socket=stats_socket,
+                        ssl_crt=ssl_crt)
+            
     def _get_listeners_on_lb(self, lb_id):
         if os.path.exists(util.pid_path(lb_id)):
             if os.path.exists(
@@ -528,6 +566,22 @@ class Loadbalancer(object):
 
     def _cert_file_path(self, lb_id, filename):
         return os.path.join(self._cert_dir(lb_id), filename)
+
+    def vrrp_check_script_update(self, lb_id, action):
+        lb_ids = util.get_listeners()
+        if action == consts.AMP_ACTION_STOP:
+            lb_ids.remove(lb_id)
+        args = []
+        for lb_id in lb_ids:
+            args.append(util.haproxy_sock_path(lb_id))
+
+        if not os.path.exists(util.keepalived_dir()):
+            os.makedirs(util.keepalived_dir())
+            os.makedirs(util.keepalived_check_scripts_dir())
+
+        cmd = 'haproxy-vrrp-check {args}; exit $?'.format(args=' '.join(args))
+        with open(util.haproxy_check_script_path(), 'w') as text_file:
+            text_file.write(cmd)
 
     def _check_haproxy_status(self, lb_id):
         if os.path.exists(util.pid_path(lb_id)):

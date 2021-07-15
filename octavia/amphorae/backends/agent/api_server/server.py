@@ -31,7 +31,6 @@ from octavia.amphorae.backends.agent.api_server import osutils
 from octavia.amphorae.backends.agent.api_server import plug
 from octavia.amphorae.backends.agent.api_server import udp_listener_base
 from octavia.amphorae.backends.agent.api_server import util
-from octavia.amphorae.backends.agent.api_server import filebeat_compatibility
 from octavia.amphorae.backends.agent.api_server import filebeat
 
 BUFFER = 1024
@@ -63,6 +62,7 @@ class Server(object):
                               get_server_driver())
         self._plug = plug.Plug(self._osutils)
         self._amphora_info = amphora_info.AmphoraInfo(self._osutils)
+        self._filebeat = filebeat.Filebeat()
 
         register_app_error_handler(self.app)
 
@@ -72,27 +72,26 @@ class Server(object):
                               '/loadbalancer/<amphora_id>/<lb_id>/haproxy',
                               view_func=self.upload_haproxy_config,
                               methods=['PUT'])
-        # self.app.add_url_rule(rule=PATH_PREFIX +
-        #                       '/loadbalancer/<amphora_id>/<lb_id>/filebeat',
-        #                       view_func=self.upload_filebeat_config,
-        #                       methods=['PUT'])
+        self.app.add_url_rule(rule=PATH_PREFIX + '/filebeat/upload',
+                              view_func=self.upload_filebeat_config,
+                              methods=['PUT']) 
+                              
         self.app.add_url_rule(rule=PATH_PREFIX +
                               '/listeners/<amphora_id>/<listener_id>'
                               '/udp_listener',
                               view_func=self.upload_udp_listener_config,
                               methods=['PUT'])
+
         self.app.add_url_rule(rule=PATH_PREFIX +
                               '/loadbalancer/<lb_id>/haproxy',
                               view_func=self.get_haproxy_config,
                               methods=['GET'])
-        # self.app.add_url_rule(rule=PATH_PREFIX +
-        #                       '/loadbalancer/<lb_id>/filebeat',
-        #                       view_func=self.get_filebeat_config,
-        #                       methods=['GET'])
+        
         self.app.add_url_rule(rule=PATH_PREFIX +
                               '/listeners/<listener_id>/udp_listener',
                               view_func=self.get_udp_listener_config,
                               methods=['GET'])
+
         self.app.add_url_rule(rule=PATH_PREFIX +
                               '/loadbalancer/<object_id>/<action>',
                               view_func=self.start_stop_lb_object,
@@ -154,11 +153,11 @@ class Server(object):
     def get_udp_listener_config(self, listener_id):
         return self._udp_listener.get_udp_listener_config(listener_id)
 
-    # def upload_filebeat_config(self, amphora_id, lb_id):
-    #     return self._loadbalancer.upload_filebeat_config(amphora_id, lb_id)
+    def upload_filebeat_config(self):
+        return self._loadbalancer.upload_filebeat_config()
 
-    # def get_filebeat_config(self, lb_id):
-    #     return self._loadbalancer.get_filebeat_config(lb_id)
+    def get_filebeat_config(self):
+        return self._loadbalancer.get_filebeat_config()
     
     def start_stop_lb_object(self, object_id, action):
         protocol = util.get_protocol_for_lb_object(object_id)

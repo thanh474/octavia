@@ -62,19 +62,19 @@ def keepalived_lvs_dir():
     return os.path.join(CONF.haproxy_amphora.base_path, 'lvs')
 
 
-def keepalived_lvs_init_path(init_system, listener_id):
+def keepalived_lvs_init_path(init_system, lb_id):
     if init_system == consts.INIT_SYSTEMD:
         return os.path.join(consts.SYSTEMD_DIR,
                             consts.KEEPALIVED_SYSTEMD_PREFIX %
-                            str(listener_id))
+                            str(lb_id))
     if init_system == consts.INIT_UPSTART:
         return os.path.join(consts.UPSTART_DIR,
                             consts.KEEPALIVED_UPSTART_PREFIX %
-                            str(listener_id))
+                            str(lb_id))
     if init_system == consts.INIT_SYSVINIT:
         return os.path.join(consts.SYSVINIT_DIR,
                             consts.KEEPALIVED_SYSVINIT_PREFIX %
-                            str(listener_id))
+                            str(lb_id))
     raise UnknownInitError()
 
 
@@ -87,25 +87,25 @@ def keepalived_backend_check_script_path():
                         'udp_check.sh')
 
 
-def keepalived_lvs_pids_path(listener_id):
+def keepalived_lvs_pids_path(lb_id):
     pids_path = {}
     for file_ext in ['pid', 'vrrp.pid', 'check.pid']:
         pids_path[file_ext] = (
             os.path.join(CONF.haproxy_amphora.base_path,
                          ('lvs/octavia-keepalivedlvs-%s.%s') %
-                         (str(listener_id), file_ext)))
+                         (str(lb_id), file_ext)))
     return pids_path['pid'], pids_path['vrrp.pid'], pids_path['check.pid']
 
 
-def keepalived_lvs_cfg_path(listener_id):
+def keepalived_lvs_cfg_path(lb_id):
     return os.path.join(CONF.haproxy_amphora.base_path,
                         ('lvs/octavia-keepalivedlvs-%s.conf') %
-                        str(listener_id))
+                        str(lb_id))
 
 
 def haproxy_dir(lb_id):
     return os.path.join(CONF.haproxy_amphora.base_path, lb_id)
-    
+
 def filebeat_dir(lb_id):
     return os.path.join(CONF.filebeat_amphora.base_path, lb_id)
 
@@ -122,8 +122,8 @@ def get_haproxy_pid(lb_id):
         return f.readline().rstrip()
 
 
-def get_keepalivedlvs_pid(listener_id):
-    pid_file = keepalived_lvs_pids_path(listener_id)[0]
+def get_keepalivedlvs_pid(lb_id):
+    pid_file = keepalived_lvs_pids_path(lb_id)[0]
     with open(pid_file, 'r') as f:
         return f.readline().rstrip()
 
@@ -218,10 +218,10 @@ def get_udp_listeners():
     return result
 
 
-def is_udp_listener_running(listener_id):
-    pid_file = keepalived_lvs_pids_path(listener_id)[0]
+def is_udp_listener_running(lb_id):
+    pid_file = keepalived_lvs_pids_path(lb_id)[0]
     return os.path.exists(pid_file) and os.path.exists(
-        os.path.join('/proc', get_keepalivedlvs_pid(listener_id)))
+        os.path.join('/proc', get_keepalivedlvs_pid(lb_id)))
 
 
 def get_os_init_system():
@@ -284,7 +284,7 @@ def get_protocol_for_lb_object(object_id):
     If the listener is a UDP based listener (lvs) return UDP.
     If the listener is not identifiable, return None.
 
-    :param listener_id: The ID of the listener to identify.
+    :param lb_id: The ID of the listener to identify.
     :returns: TCP, UDP, or None
     """
     if os.path.exists(config_path(object_id)):
@@ -415,3 +415,9 @@ def send_vip_advertisements(lb_id):
     except Exception as e:
         LOG.debug('Send VIP advertisement failed due to :%s. '
                   'This amphora may not be the MASTER. Ignoring.', str(e))
+                  
+def filebeat_init_path(init_system):
+    if init_system == consts.INIT_SYSTEMD:
+        return os.path.join(consts.SYSTEMD_DIR, consts.FILEBEAT_SYSTEMD)
+    else:
+        raise UnknownInitError()
