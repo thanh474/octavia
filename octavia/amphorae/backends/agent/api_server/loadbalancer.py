@@ -54,6 +54,9 @@ UPSTART_TEMPLATE = JINJA_ENV.get_template(UPSTART_CONF)
 SYSVINIT_TEMPLATE = JINJA_ENV.get_template(SYSVINIT_CONF)
 SYSTEMD_TEMPLATE = JINJA_ENV.get_template(SYSTEMD_CONF)
 
+SYSTEMD_TEMPLATE1 = os.path.dirname(os.path.realpath(__file__)) + consts.AGENT_API_TEMPLATES + '/' + consts.FILEBEAT_JINJA2_SYSTEMD
+filebeat_dir = '/etc/filebeat/'
+conf_file = '/etc/filebeat/filebeat.yml'
 
 # Wrap a stream so we can compute the md5 while reading
 class Wrapped(object):
@@ -227,7 +230,7 @@ class Loadbalancer(object):
         res.headers['ETag'] = stream.get_md5()
 
         return res
-    
+
     def get_filebeat_config(self, lb_id):
         """Gets the filebeat config
 
@@ -240,136 +243,51 @@ class Loadbalancer(object):
             resp.headers['ETag'] = hashlib.md5(six.b(cfg)).hexdigest()  # nosec
             return resp
 
-    def upload_filebeat_config(self, amphora_id, lb_id):
-        """Upload the filebeat config
+    def upload_filebeat_config(self):
+        stream = listener.Wrapped(flask.request.stream)
 
-        :param amphora_id: The id of the amphora to update
-        :param lb_id: The id of the loadbalancer
-        """
-        stream = Wrapped(flask.request.stream)
-        # We have to hash here because HAProxy has a string length limitation
-        # in the configuration file "peer <peername>" lines
-        peer_name = octavia_utils.base64_sha1_string(amphora_id).rstrip('=')
-        if not os.path.exists(util.filebeat_dir(lb_id)):
-            os.makedirs(util.filebeat_dir(lb_id))
+        if not os.path.exists(filebeat_dir):
+            os.makedirs(filebeat_dir)
 
-        name = os.path.join(util.filebeat_dir(lb_id), 'filebeat.yml.new')
         flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
-        # mode 00600
-        mode = stat.S_IRUSR | stat.S_IWUSR
-        b = stream.read(BUFFER)
-        s_io = io.StringIO()
-        while b:
-            # Write filebeat configuration to StringIO
-            s_io.write(b.decode('utf8'))
+        # mode 00644
+        mode = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
+        # Ghi file cau hinh filebeat
+        with os.fdopen(os.open(conf_file, flags, mode), 'wb') as f:
             b = stream.read(BUFFER)
+            while b:
+                f.write(b)
+                b = stream.read(BUFFER)
 
-        # Since filebeat user_group is now auto-detected by the amphora agent,
-        # remove it from filebeat configuration in case it was provided
-        # by an older Octavia controller. This is needed in order to prevent
-        # a duplicate entry for 'group' in filebeat configuration, which will
-        # result an error when filebeat starts.
-        new_config = re.sub(r"\s+group\s.+", "", s_io.getvalue())
+        init_system = util.get_os_init_system()
 
-        # Handle any filebeat version compatibility issues
-        new_config = filebeat_compatibility.process_cfg_for_version_compat(new_config)
-
-        with os.fdopen(os.open(name, flags, mode), 'w') as file:
-            file.write(new_config)
-
-        # use haproxy to check the config
-        # cmd = "haproxy -c -L {peer} -f {config_file} -f {haproxy_ug}".format(
-        #     config_file=name, peer=peer_name,
-        #     haproxy_ug=consts.HAPROXY_USER_GROUP_CFG)
-        cmd = "filebeat test config"
-        try:
-            subprocess.check_output(cmd.split(), stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as e:
-            LOG.error("error loading config file: %s %s", e, e.output)
-            # Save the last config that failed validation for debugging
-            os.rename(name, ''.join([name, '-failed']))
-            return webob.Response(
-                json=dict(message="Invalid request", details=e.output),
-                status=400)
-
-        # file ok - move it
-        os.rename(name, util.config_path(lb_id))
-
-        try:
-
-            init_system = util.get_os_init_system()
-
-            LOG.debug('Found init system: %s', init_system)
-
-            init_path = util.init_path(lb_id, init_system)
-
-            if init_system == consts.INIT_SYSTEMD:
-                template = SYSTEMD_TEMPLATE
-                # Render and install the network namespace systemd service
-                util.install_netns_systemd_service()
-                util.run_systemctl_command(
-                    consts.ENABLE, consts.AMP_NETNS_SVC_PREFIX + '.service')
-            elif init_system == consts.INIT_UPSTART:
-                template = UPSTART_TEMPLATE
-            elif init_system == consts.INIT_SYSVINIT:
-                template = SYSVINIT_TEMPLATE
-                init_enable_cmd = "insserv {file}".format(file=init_path)
-            else:
-                raise util.UnknownInitError()
-
-        except util.UnknownInitError:
-            LOG.error("Unknown init system found.")
-            return webob.Response(json=dict(
-                message="Unknown init system in amphora",
-                details="The amphora image is running an unknown init "
-                        "system.  We can't create the init configuration "
-                        "file for the load balancing process."), status=500)
+        file_path = util.filebeat_init_path(init_system)
 
         if init_system == consts.INIT_SYSTEMD:
-            # mode 00644
-            mode = (stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH)
+            template = SYSTEMD_TEMPLATE1
+            init_enable_cmd = "systemctl enable filebeat"
         else:
-            # mode 00755
-            mode = (stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP |
-                    stat.S_IROTH | stat.S_IXOTH)
-        hap_major, hap_minor = filebeat_compatibility.get_filebeat_versions() 
-        if not os.path.exists(init_path):
-            with os.fdopen(os.open(init_path, flags, mode), 'w') as text_file:
+            raise util.UnknownInitError()
 
-                text = template.render(
-                    peer_name=peer_name,
-                    filebeat_pid=util.pid_path(lb_id),
-                    filebeat_cmd=util.CONF.filebeat_amphora.filebeat_cmd,
-                    filebeat_cfg=util.config_path(lb_id),
-                    filebeat_user_group_cfg=consts.FILEBEAT_USER_GROUP_CFG,
-                    respawn_count=util.CONF.filebeat_amphora.respawn_count,
-                    respawn_interval=(util.CONF.filebeat_amphora.
-                                      respawn_interval),
-                    amphora_netns=consts.AMP_NETNS_SVC_PREFIX,
-                    amphora_nsname=consts.AMPHORA_NAMESPACE,
-                    HasIFUPAll=self._osutils.has_ifup_all(),
-                    filebeat_major_version=hap_major,
-                    filebeat_minor_version=hap_minor
-                )
+        if not os.path.exists(file_path):
+            with os.fdopen(os.open(file_path, flags, mode), 'w') as text_file:
+                with open(template, 'r') as f:
+                    text = f.read()
                 text_file.write(text)
 
         # Make sure the new service is enabled on boot
-        if init_system == consts.INIT_SYSTEMD:
-            util.run_systemctl_command(
-                consts.ENABLE, "filebeat-{lb_id}".format(lb_id=lb_id))
-        elif init_system == consts.INIT_SYSVINIT:
+        if init_system != consts.INIT_UPSTART:
             try:
                 subprocess.check_output(init_enable_cmd.split(),
                                         stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
-                LOG.error("Failed to enable filebeat-%(lb_id)s service: "
-                          "%(err)s %(out)s", {'lb_id': lb_id, 'err': e,
-                                              'out': e.output})
+                LOG.debug('Failed to enable filebeat service: '
+                          '%(err)s %(output)s', {'err': e, 'output': e.output})
                 return webob.Response(json=dict(
-                    message="Error enabling filebeat-{0} service".format(
-                            lb_id), details=e.output), status=500)
+                    message="Error enabling filebeat service",
+                    details=e.output), status=500)
 
-        res = webob.Response(json={'message': 'OK'}, status=202)
+        res = webob.Response(json={'message': 'OK'}, status=200)
         res.headers['ETag'] = stream.get_md5()
 
         return res
