@@ -70,7 +70,6 @@ class Filebeat(object):
 
         res = webob.Response(json={'message': 'OK'}, status=200)
         res.headers['ETag'] = stream.get_md5()
-
         return res
 
     def manager_filebeat_service(self, action):
