@@ -123,7 +123,7 @@ def pid_path_filebeat(lb_id):
     return os.path.join(filebeat_dir(lb_id), lb_id + '.pid')
     
 def config_path_filebeat(lb_id):
-    return os.path.join(filebeat_dir(lb_id), 'filebeat.yml'
+    return os.path.join(filebeat_dir(lb_id), 'filebeat.yml')
 
 def get_filebeat_pid(lb_id):
     with open(pid_path_filebeat(lb_id), 'r') as f:
