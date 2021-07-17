@@ -91,6 +91,14 @@ class LoadBalancerFlows(object):
 
         if listeners:
             lb_create_flow.add(*self._create_listeners_flow())
+        
+        # monitor
+        lb_create_flow.add(self.amp_flows.get_monitor_subflow(
+            constants.GET_MONITOR_SUBFLOW))
+        # logging
+        lb_create_flow.add(self.amp_flows.get_logging_subflow(
+            constants.GET_LOGGING_SUBFLOW))
+
 
         return lb_create_flow
 

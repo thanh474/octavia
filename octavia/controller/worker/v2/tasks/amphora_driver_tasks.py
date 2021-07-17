@@ -384,3 +384,29 @@ class AmphoraConfigUpdate(BaseAmphoraTask):
             LOG.error('Amphora {} does not support agent configuration '
                       'update. Please update the amphora image for this '
                       'amphora. Skipping.'.format(amphora.id))
+
+class AmphoraLoggingUpdate(BaseAmphoraTask):
+    """Task to update logging config of a LB. """
+
+    def execute(self, loadbalancer):
+        self.amphora_driver.update_logging_config(loadbalancer)
+        LOG.debug("Updated Logging config of loadbalancer %s amphorae",
+                  loadbalancer.id)
+    
+
+class AmphoraLoggingStart(BaseAmphoraTask):
+    """Task to start logging service of all amphorae of a LB"""
+
+    def execute(self, loadbalancer):
+        self.amphora_driver.start_logging_service(loadbalancer)
+        LOG.debug("Started Logging service of a loadbalancer %s amphorae",
+                  loadbalancer.id)
+
+
+class AmphoraLoggingStop(BaseAmphoraTask):
+    """Task to start logging service of all amphorae of a LB"""
+
+    def execute(self, loadbalancer):
+        self.amphora_driver.stop_logging_service(loadbalancer)
+        LOG.debug("Stopped Logging service of a loadbalancer %s amphorae",
+                  loadbalancer.id)

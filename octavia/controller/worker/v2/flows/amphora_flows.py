@@ -534,8 +534,26 @@ class AmphoraFlows(object):
             database_tasks.DisableAmphoraHealthMonitoring(
                 rebind={constants.AMPHORA: constants.FAILED_AMPHORA},
                 requires=constants.AMPHORA))
+        # monitor
+        monitor_subflow = self.get_monitor_subflow(role)
+        failover_amphora_flow.add(monitor_subflow)
+
+        # logging
+        logging_subflow = self.get_logging_subflow(role)
+        failover_amphora_flow.add(logging_subflow)
 
         return failover_amphora_flow
+
+    def get_logging_subflow(self, prefix):
+        sf_name = prefix + '-' + constants.GET_MONITOR_SUBFLOW
+        monitor_subflow = linear_flow.Flow(sf_name)
+        monitor_subflow.add(amphora_driver_tasks.AmphoraLoggingUpdate(
+            name=sf_name + '-' + 'octavia-logging-update-flow',
+            requires=constants.LOADBALANCER))
+        monitor_subflow.add(amphora_driver_tasks.AmphoraLoggingStart(
+            name=sf_name + '-' + 'octavia-logging-start-flow',
+            requires=constants.LOADBALANCER))
+        return monitor_subflow
 
     def get_vrrp_subflow(self, prefix):
         sf_name = prefix + '-' + constants.GET_VRRP_SUBFLOW
