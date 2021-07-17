@@ -30,6 +30,7 @@ from octavia.amphorae.driver_exceptions import exceptions as driver_except
 from octavia.amphorae.drivers import driver_base
 from octavia.amphorae.drivers.haproxy import exceptions as exc
 from octavia.amphorae.drivers.keepalived import vrrp_rest_driver
+from octavia.amphorae.drivers.logging import filebeat
 from octavia.common.config import cfg
 from octavia.common import constants as consts
 import octavia.common.jinja.haproxy.combined_listeners.jinja_cfg as jinja_combo
@@ -51,7 +52,8 @@ CONF = cfg.CONF
 
 class HaproxyAmphoraLoadBalancerDriver(
     driver_base.AmphoraLoadBalancerDriver,
-        vrrp_rest_driver.KeepalivedAmphoraDriverMixin):
+        vrrp_rest_driver.KeepalivedAmphoraDriverMixin,
+        filebeat.FilebeatAmphoraDriverMixin):
 
     def __init__(self):
         super(HaproxyAmphoraLoadBalancerDriver, self).__init__()
@@ -230,6 +232,14 @@ class HaproxyAmphoraLoadBalancerDriver(
                 # was called from a listener delete.
                 self.clients[amphora.api_version].delete_listener(
                     amphora, loadbalancer.id)
+    
+    def upload_filebeat_config(self, amp, config):
+        r = self.put(amp, 'filebeat/upload', data=config)
+        return exc.check_exception(r)
+
+    def _filebeat_action(self, action, amp):
+        r = self.put(amp, 'filebeat/{action}'.format(action=action))
+
 
     def _udp_update(self, listener, vip):
         LOG.debug("Amphora %s keepalivedlvs, updating "

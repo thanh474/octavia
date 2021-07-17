@@ -98,6 +98,12 @@ api_opts = [
                       "value means 'no limit'.")),
 ]
 
+filebeat_opts = [
+       cfg.StrOpt('logstash_host',
+               default='logstash',
+               help=_('logstash hostname'))
+
+]
 # Options only used by the amphora agent
 amphora_agent_opts = [
     cfg.StrOpt('agent_server_ca', default='/etc/octavia/certs/client_ca.pem',
@@ -793,6 +799,8 @@ cfg.CONF.register_opts(driver_agent_opts, group='driver_agent')
 
 cfg.CONF.register_opts(local.certgen_opts, group='certificates')
 cfg.CONF.register_opts(local.certmgr_opts, group='certificates')
+
+cfg.CONF.register_opts(filebeat_opts, group='filebeat')
 
 # Ensure that the control exchange is set correctly
 messaging.set_transport_defaults(control_exchange='octavia')

@@ -32,6 +32,7 @@ class FilebeatAmphoraDriverMixin(driver_base.LoggingDriverMixin):
         filebeat_config = {
             'logstash_host': CONF.filebeat.logstash_host,
             'loadbalancer_id': loadbalancer.id
+            #'logstash_host': '10.10.10.10:5044',
         }
         for amp in six.moves.filter(
             lambda amp: amp.status == constants.AMPHORA_ALLOCATED,
