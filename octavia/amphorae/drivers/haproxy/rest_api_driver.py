@@ -79,6 +79,10 @@ class HaproxyAmphoraLoadBalancerDriver(
             haproxy_template=CONF.haproxy_amphora.haproxy_template,
             connection_logging=CONF.haproxy_amphora.connection_logging)
         self.udp_jinja = jinja_udp_cfg.LvsJinjaTemplater()
+        
+        self.start_filebeat = functools.partial(self._filebeat_action, 'start')
+        self.stop_filebeat = functools.partial(self._filebeat_action, 'stop')
+        self.restart_filebeat = functools.partial(self._filebeat_action, 'restart')
 
     def _get_haproxy_versions(self, amphora):
         """Get major and minor version number from haproxy
