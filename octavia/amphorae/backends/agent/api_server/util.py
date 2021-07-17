@@ -106,19 +106,28 @@ def keepalived_lvs_cfg_path(lb_id):
 def haproxy_dir(lb_id):
     return os.path.join(CONF.haproxy_amphora.base_path, lb_id)
 
-
 def pid_path(lb_id):
     return os.path.join(haproxy_dir(lb_id), lb_id + '.pid')
 
-
 def config_path(lb_id):
     return os.path.join(haproxy_dir(lb_id), 'haproxy.cfg')
-
 
 def get_haproxy_pid(lb_id):
     with open(pid_path(lb_id), 'r') as f:
         return f.readline().rstrip()
 
+def filebeat_dir(lb_id):
+    return os.path.join(CONF.filebeat_amphora.base_path, lb_id)
+
+def pid_path_filebeat(lb_id):
+    return os.path.join(filebeat_dir(lb_id), lb_id + '.pid')
+    
+def config_path_filebeat(lb_id):
+    return os.path.join(filebeat_dir(lb_id), 'filebeat.yml'
+
+def get_filebeat_pid(lb_id):
+    with open(pid_path_filebeat(lb_id), 'r') as f:
+        return f.readline().rstrip()
 
 def get_keepalivedlvs_pid(lb_id):
     pid_file = keepalived_lvs_pids_path(lb_id)[0]

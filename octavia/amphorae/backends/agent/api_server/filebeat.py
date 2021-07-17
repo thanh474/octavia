@@ -24,6 +24,8 @@ conf_file = '/etc/filebeat/filebeat.yml'
 
 class Filebeat(object):
 
+
+            
     def upload_filebeat_config(self):
         stream = loadbalancer.Wrapped(flask.request.stream)
 
@@ -100,3 +102,4 @@ class Filebeat(object):
             json=dict(message='OK',
                       details='filebeat {action}ed'.format(action=action)),
             status=202)
+
